@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Hierarchical menu displaying products with add to favorites functionality">
+    <meta property="og:title" content="Product Menu">
+    <meta property="og:description" content="Hierarchical menu displaying products with add to favorites functionality">
+    <meta property="og:image" content="path/to/image.jpg">
+    <meta property="og:url" content="https://yourusername.github.io/repo-name">
+    <title>Product Menu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 1em;
+        }
+        header {
+            background-color: #f8f8f8;
+            padding: 1em;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        main {
+            padding: 1em;
+        }
+        .menu {
+            display: grid;
+            gap: 2em;
+        }
+        .category {
+            display: grid;
+            gap: 1em;
+        }
+        .category__title {
+            font-size: 1.5em;
+            margin: 0;
+        }
+        .product-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 0.5em;
+        }
+        .product-list__item {
+            padding: 0.5em;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .product-list__item:hover {
+            background-color: #f0f0f0;
+        }
+        .product-list__item span {
+            margin-left: 1em;
+        }
+        .product-list__item .sale-price {
+            display: none;
+            color: green;
+        }
+        .product-list__item:hover .sale-price {
+            display: inline;
+        }
+        .favorite {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <header role="banner">
+        <h1>Product Menu - Hierarchical menu</h1>
+    </header>
+    <main role="main">
+        <div id="menu" class="menu"></div>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('https://neodigm.github.io/FED_Programming_Challenge/products.json')
+                .then(response => response.json())
+                .then(data => {
+                    const normalizedData = normalizeData(data);
+                    generateMenu(normalizedData);
+                });
+
+            function normalizeData(data) {
+                const categories = {};
+                data.forEach(item => {
+                    if (!categories[item.cat]) {
+                        categories[item.cat] = [];
+                    }
+                    categories[item.cat].push(item);
+                });
+                return categories;
+            }
+
+            function generateMenu(data) {
+                const menu = document.getElementById('menu');
+                const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+
+                Object.keys(data).forEach(category => {
+                    const categoryElement = document.createElement('div');
+                    categoryElement.classList.add('category');
+
+                    const categoryTitle = document.createElement('h2');
+                    categoryTitle.classList.add('category__title');
+                    categoryTitle.textContent = category;
+                    categoryElement.appendChild(categoryTitle);
+
+                    const productList = document.createElement('ul');
+                    productList.classList.add('product-list');
+
+                    data[category].forEach(product => {
+                        const productItem = document.createElement('li');
+                        productItem.classList.add('product-list__item');
+                        productItem.textContent = product.product;
+
+                        const salePrice = document.createElement('span');
+                        salePrice.textContent = `Sale: $${product.sale}`;
+                        salePrice.classList.add('sale-price');
+                        productItem.appendChild(salePrice);
+
+                        const favoriteIcon = document.createElement('span');
+                        favoriteIcon.innerHTML = '♡';
+                        if (favorites.some(fav => fav.product === product.product)) {
+                            favoriteIcon.classList.add('favorite');
+                            favoriteIcon.innerHTML = '♡';
+                        }
+                        productItem.appendChild(favoriteIcon);
+
+                        productItem.addEventListener('mouseover', () => {
+                            salePrice.style.display = 'inline';
+                        });
+
+                        productItem.addEventListener('mouseout', () => {
+                            salePrice.style.display = 'none';
+                        });
+
+                        productItem.addEventListener('click', () => {
+                            toggleFavorite(product, favoriteIcon);
+                        });
+
+                        productList.appendChild(productItem);
+                    });
+
+                    categoryElement.appendChild(productList);
+                    menu.appendChild(categoryElement);
+                });
+            }
+
+            function toggleFavorite(product, icon) {
+                let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+                const index = favorites.findIndex(fav => fav.product === product.product);
+
+                if (index === -1) {
+                    favorites.push(product);
+                    icon.classList.add('favorite');
+                    icon.innerHTML = '♡';
+                } else {
+                    favorites.splice(index, 1);
+                    icon.classList.remove('favorite');
+                    icon.innerHTML = '♡';
+                }
+
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                mockAnalyticsEvent(product);
+            }
+
+            function mockAnalyticsEvent(product) {
+                console.log(`Product favorited: ${product.product}`);
+            }
+        });
+    </script>
+</body>
+</html>
