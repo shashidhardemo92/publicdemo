@@ -75,7 +75,7 @@
 </head>
 <body>
     <header role="banner">
-        <h1>Product Menu - Hierarchical menu</h1>
+        <h1>Product Menu</h1>
     </header>
     <main role="main">
         <div id="menu" class="menu"></div>
@@ -130,7 +130,7 @@
                         favoriteIcon.innerHTML = '♡';
                         if (favorites.some(fav => fav.product === product.product)) {
                             favoriteIcon.classList.add('favorite');
-                            favoriteIcon.innerHTML = '♡';
+                            favoriteIcon.innerHTML = '❤️';
                         }
                         productItem.appendChild(favoriteIcon);
 
@@ -161,19 +161,26 @@
                 if (index === -1) {
                     favorites.push(product);
                     icon.classList.add('favorite');
-                    icon.innerHTML = '♡';
+                    icon.innerHTML = '❤️';
+                    mockAnalyticsEvent('favorite_added', product);
                 } else {
                     favorites.splice(index, 1);
                     icon.classList.remove('favorite');
                     icon.innerHTML = '♡';
+                    mockAnalyticsEvent('favorite_removed', product);
                 }
 
                 localStorage.setItem('favorites', JSON.stringify(favorites));
-                mockAnalyticsEvent(product);
             }
 
-            function mockAnalyticsEvent(product) {
-                console.log(`Product favorited: ${product.product}`);
+            function mockAnalyticsEvent(action, product) {
+                console.log(`GA Event - Action: ${action}, Product: ${product.product}`);
+                // Mocking Google Analytics event
+                // gtag('event', action, {
+                //     'event_category': 'Product',
+                //     'event_label': product.product,
+                //     'value': product.price
+                // });
             }
         });
     </script>
